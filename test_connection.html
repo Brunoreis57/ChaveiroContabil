@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Conexão Supabase</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Teste de Conexão Supabase</h1>
+    <button onclick="testConnection()">Testar Conexão</button>
+    <button onclick="testCreateUser()">Testar Criação de Usuário</button>
+    <div id="result"></div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://tgzbttvylaiaizamhoqm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnemJ0dHZ5bGFpYWl6YW1ob3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MzMzMDcsImV4cCI6MjA3MDAwOTMwN30.CcLwQZ6ruy67c0as-WV6ucux08JanD48TEf3d-b8HFo';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function testConnection() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testando conexão...';
+            
+            try {
+                // Teste simples de conexão
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    result.innerHTML = `<p style="color: red;">Erro na conexão: ${error.message}</p>`;
+                    console.error('Erro:', error);
+                } else {
+                    result.innerHTML = `<p style="color: green;">Conexão OK! Tabela users encontrada.</p>`;
+                }
+            } catch (err) {
+                result.innerHTML = `<p style="color: red;">Erro: ${err.message}</p>`;
+                console.error('Erro:', err);
+            }
+        }
+        
+        async function testCreateUser() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testando criação de usuário...';
+            
+            try {
+                const testUser = {
+                    name: 'Teste Usuario',
+                    email: `teste${Date.now()}@email.com`,
+                    phone: '11999999999',
+                    password: '123456'
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .insert([testUser])
+                    .select();
+                
+                if (error) {
+                    result.innerHTML = `<p style="color: red;">Erro ao criar usuário: ${error.message}</p><pre>${JSON.stringify(error, null, 2)}</pre>`;
+                    console.error('Erro:', error);
+                } else {
+                    result.innerHTML = `<p style="color: green;">Usuário criado com sucesso!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (err) {
+                result.innerHTML = `<p style="color: red;">Erro: ${err.message}</p>`;
+                console.error('Erro:', err);
+            }
+        }
+    </script>
+</body>
+</html>

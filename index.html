@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChaveiroApp - Gestão Profissional</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Configuração do Supabase -->
+    <script src="supabase.js"></script>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <i class="fas fa-key"></i>
+                <h1>ChaveiroApp</h1>
+                <p>Gestão Profissional de Serviços</p>
+            </div>
+            
+            <div class="login-tabs">
+                <button class="tab-btn active" onclick="showLogin()">Entrar</button>
+                <button class="tab-btn" onclick="showRegister()">Cadastrar</button>
+            </div>
+            
+            <!-- Formulário de Login -->
+            <form id="loginForm" class="auth-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" placeholder="Senha" required>
+                </div>
+                <button type="submit" class="auth-btn">Entrar</button>
+            </form>
+            
+            <!-- Formulário de Cadastro -->
+            <form id="registerForm" class="auth-form hidden">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" placeholder="Nome completo" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" placeholder="Telefone" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" placeholder="Senha" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" placeholder="Confirmar senha" required>
+                </div>
+                <button type="submit" class="auth-btn">Cadastrar</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- App Principal -->
+    <div id="mainApp" class="main-app hidden">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-key"></i>
+                <span>ChaveiroApp</span>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Resumo</span>
+                </li>
+                <li class="nav-item" data-section="services">
+                    <i class="fas fa-tools"></i>
+                    <span>Serviços</span>
+                </li>
+                <li class="nav-item" data-section="expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Despesas</span>
+                </li>
+                <li class="nav-item" data-section="inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span>Estoque</span>
+                </li>
+                <li class="nav-item" data-section="sales">
+                    <i class="fas fa-tags"></i>
+                    <span>Venda</span>
+                </li>
+                <li class="nav-item" data-section="reports">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Relatórios</span>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="app-header">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">Resumo</h1>
+                <div class="user-info">
+                    <span id="userName">Usuário</span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </header>
+            
+            <!-- Dashboard -->
+            <section id="dashboardSection" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Receita Hoje</h3>
+                            <p class="stat-value" id="todayRevenue">R$ 0,00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Receita Semanal</h3>
+                            <p class="stat-value" id="weekRevenue">R$ 0,00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Receita Mensal</h3>
+                            <p class="stat-value" id="monthRevenue">R$ 0,00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Lucro Mensal</h3>
+                            <p class="stat-value" id="monthProfit">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Receitas vs Despesas (7 dias)</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>Serviços Mais Realizados</h3>
+                        <canvas id="servicesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Seção de Serviços -->
+            <section id="servicesSection" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Serviços</h2>
+                    <button class="add-btn" onclick="showServiceModal()">
+                        <i class="fas fa-plus"></i>
+                        Novo Serviço
+                    </button>
+                </div>
+                
+                <div class="filters">
+                    <input type="date" id="serviceFilterDate" placeholder="Filtrar por data">
+                    <select id="serviceFilterType">
+                        <option value="">Todos os tipos</option>
+                        <option value="Abertura">Abertura</option>
+                        <option value="Instalação">Instalação</option>
+                        <option value="Cópia">Cópia</option>
+                        <option value="Troca de fechadura">Troca de fechadura</option>
+                        <option value="Troca de segredo">Troca de segredo</option>
+                    </select>
+                    <input type="text" id="serviceFilterModel" placeholder="Filtrar por modelo">
+                    <button onclick="filterServices()" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filtrar
+                    </button>
+                </div>
+                
+                <div class="services-list" id="servicesList">
+                    <!-- Serviços serão carregados aqui -->
+                </div>
+            </section>
+            
+            <!-- Seção de Despesas -->
+            <section id="expensesSection" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Despesas</h2>
+                    <button class="add-btn" onclick="showExpenseModal()">
+                        <i class="fas fa-plus"></i>
+                        Nova Despesa
+                    </button>
+                </div>
+                
+                <div class="filters">
+                    <input type="date" id="expenseFilterDate" placeholder="Filtrar por data">
+                    <select id="expenseFilterType">
+                        <option value="">Todos os tipos</option>
+                        <option value="Combustível">Combustível</option>
+                        <option value="Anúncios">Anúncios</option>
+                        <option value="Materiais">Materiais</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                    <button onclick="filterExpenses()" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filtrar
+                    </button>
+                </div>
+                
+                <div class="expenses-list" id="expensesList">
+                    <!-- Despesas serão carregadas aqui -->
+                </div>
+            </section>
+            
+            <!-- Seção de Estoque -->
+            <section id="inventorySection" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Estoque</h2>
+                    <button class="add-btn" onclick="showInventoryModal()">
+                        <i class="fas fa-plus"></i>
+                        Novo Item
+                    </button>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="inventoryFilterName" placeholder="Filtrar por nome">
+                    <select id="inventoryFilterCategory">
+                        <option value="">Todas as categorias</option>
+                        <option value="Fechaduras">Fechaduras</option>
+                        <option value="Chaves">Chaves</option>
+                        <option value="Cilindros">Cilindros</option>
+                        <option value="Acessórios">Acessórios</option>
+                        <option value="Ferramentas">Ferramentas</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                    <button onclick="filterInventory()" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filtrar
+                    </button>
+                </div>
+                
+                <div class="inventory-list" id="inventoryList">
+                    <!-- Itens do estoque serão carregados aqui -->
+                </div>
+            </section>
+            
+            <!-- Seção de Venda -->
+            <section id="salesSection" class="content-section">
+                <div class="section-header">
+                    <h2>Lista de Preços - Serviços</h2>
+                    <button class="add-btn" onclick="showSalesModal()">
+                        <i class="fas fa-plus"></i>
+                        Novo Serviço
+                    </button>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="salesFilterService" placeholder="Filtrar por serviço">
+                    <select id="salesFilterCategory">
+                        <option value="">Todas as categorias</option>
+                        <option value="Abertura">Abertura</option>
+                        <option value="Instalação">Instalação</option>
+                        <option value="Cópia">Cópia de Chaves</option>
+                        <option value="Troca">Troca de Fechadura</option>
+                        <option value="Reparo">Reparo</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                    <button onclick="filterSales()" class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filtrar
+                    </button>
+                </div>
+                
+                <div class="sales-list" id="salesList">
+                    <!-- Lista de preços será carregada aqui -->
+                </div>
+            </section>
+            
+            <!-- Seção de Relatórios -->
+            <section id="reportsSection" class="content-section">
+                <div class="section-header">
+                    <h2>Relatórios</h2>
+                    <select id="reportPeriod">
+                        <option value="month">Este Mês</option>
+                        <option value="quarter">Último Trimestre</option>
+                        <option value="year">Este Ano</option>
+                    </select>
+                </div>
+                
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <h3>Resumo Financeiro</h3>
+                        <div class="report-item">
+                            <span>Total de Receitas:</span>
+                            <span id="reportRevenue">R$ 0,00</span>
+                        </div>
+                        <div class="report-item">
+                            <span>Total de Despesas:</span>
+                            <span id="reportExpenses">R$ 0,00</span>
+                        </div>
+                        <div class="report-item profit">
+                            <span>Lucro Líquido:</span>
+                            <span id="reportProfit">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card">
+                        <h3>Serviços Mais Realizados</h3>
+                        <div id="topServices">
+                            <!-- Top serviços serão carregados aqui -->
+                        </div>
+                    </div>
+                    
+                    <div class="report-card">
+                        <h3>Despesas Detalhadas</h3>
+                        <div id="expenseBreakdown">
+                            <!-- Breakdown de despesas será carregado aqui -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Modal de Serviço -->
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Serviço</h3>
+                <button class="close-btn" onclick="closeModal('serviceModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="serviceForm">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="serviceDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de Serviço</label>
+                    <input type="text" id="serviceType" list="serviceTypes" placeholder="Digite ou selecione" required>
+                    <datalist id="serviceTypes">
+                        <option value="Abertura">
+                        <option value="Instalação">
+                        <option value="Cópia">
+                        <option value="Troca de fechadura">
+                        <option value="Troca de segredo">
+                    </datalist>
+                </div>
+                
+                <div class="form-group">
+                    <label>Modelo da Fechadura</label>
+                    <input type="text" id="lockModel" list="lockModels" placeholder="Digite ou selecione" required>
+                    <datalist id="lockModels">
+                        <option value="Stam">
+                        <option value="Pado">
+                        <option value="Papaiz">
+                        <option value="Tetra">
+                        <option value="Blindex">
+                        <option value="IFR7000">
+                        <option value="HDL">
+                        <option value="Digital">
+                    </datalist>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor Recebido</label>
+                    <input type="number" id="serviceValue" step="0.01" placeholder="0,00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="serviceNotes" placeholder="Observações adicionais..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('serviceModal')" class="cancel-btn">Cancelar</button>
+                    <button type="submit" class="save-btn">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Despesa -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Despesa</h3>
+                <button class="close-btn" onclick="closeModal('expenseModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de Despesa</label>
+                    <select id="expenseType" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="Combustível">Combustível</option>
+                        <option value="Anúncios">Anúncios</option>
+                        <option value="Materiais">Materiais</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="expenseDescription" placeholder="Descrição da despesa" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor</label>
+                    <input type="number" id="expenseValue" step="0.01" placeholder="0,00" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('expenseModal')" class="cancel-btn">Cancelar</button>
+                    <button type="submit" class="save-btn">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Estoque -->
+    <div id="inventoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Item ao Estoque</h3>
+                <button class="close-btn" onclick="closeModal('inventoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="inventoryForm">
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="inventoryName" placeholder="Nome do produto" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="inventoryCategory" required>
+                        <option value="">Selecione a categoria</option>
+                        <option value="Fechaduras">Fechaduras</option>
+                        <option value="Chaves">Chaves</option>
+                        <option value="Cilindros">Cilindros</option>
+                        <option value="Acessórios">Acessórios</option>
+                        <option value="Ferramentas">Ferramentas</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantidade</label>
+                    <input type="number" id="inventoryQuantity" min="1" placeholder="Quantidade" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor Pago (Custo)</label>
+                    <input type="number" id="inventoryCost" step="0.01" placeholder="0,00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor para Venda</label>
+                    <input type="number" id="inventoryPrice" step="0.01" placeholder="0,00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="inventoryNotes" placeholder="Observações adicionais..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('inventoryModal')" class="cancel-btn">Cancelar</button>
+                    <button type="submit" class="save-btn">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Lista de Preços -->
+    <div id="salesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Serviço à Lista</h3>
+                <button class="close-btn" onclick="closeModal('salesModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="salesForm">
+                <div class="form-group">
+                    <label>Nome do Serviço</label>
+                    <input type="text" id="salesServiceName" placeholder="Nome do serviço" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="salesCategory" required>
+                        <option value="">Selecione a categoria</option>
+                        <option value="Abertura">Abertura</option>
+                        <option value="Instalação">Instalação</option>
+                        <option value="Cópia">Cópia de Chaves</option>
+                        <option value="Troca">Troca de Fechadura</option>
+                        <option value="Reparo">Reparo</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Preço do Serviço</label>
+                    <input type="number" id="salesPrice" step="0.01" placeholder="0,00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tempo Estimado (minutos)</label>
+                    <input type="number" id="salesTime" min="1" placeholder="Tempo em minutos">
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="salesDescription" placeholder="Descrição detalhada do serviço..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('salesModal')" class="cancel-btn">Cancelar</button>
+                    <button type="submit" class="save-btn">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

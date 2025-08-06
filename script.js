@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
     loadStoredData();
+    
+    // Pré-carrega as credenciais do usuário se disponível
+    if (typeof preloadUserCredentials === 'function') {
+        preloadUserCredentials();
+    }
 });
 
 function initializeApp() {

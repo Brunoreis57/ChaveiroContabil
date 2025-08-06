@@ -16,8 +16,12 @@
       "dest": "/script.js"
     },
     {
-      "src": "/supabase.js",
-      "dest": "/supabase.js"
+      "src": "/firebase.js",
+      "dest": "/firebase.js"
+    },
+    {
+      "src": "/user_config.js",
+      "dest": "/user_config.js"
     },
     {
       "src": "/(.*)",

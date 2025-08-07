@@ -28,6 +28,18 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadStoredData();
     
+    // Event listeners para estoque
+    const inventoryForm = document.getElementById('inventoryForm');
+    if (inventoryForm) {
+        inventoryForm.addEventListener('submit', handleInventorySubmit);
+    }
+    
+    // Event listeners para vendas
+    const salesForm = document.getElementById('salesForm');
+    if (salesForm) {
+        salesForm.addEventListener('submit', handleSalesSubmit);
+    }
+    
     // Pré-carrega as credenciais do usuário se disponível
     if (typeof preloadUserCredentials === 'function') {
         preloadUserCredentials();
@@ -1457,19 +1469,7 @@ function deleteSalesItem(id) {
 }
 
 // Adicionar event listeners para os novos formulários
-document.addEventListener('DOMContentLoaded', function() {
-    // Event listeners para estoque
-    const inventoryForm = document.getElementById('inventoryForm');
-    if (inventoryForm) {
-        inventoryForm.addEventListener('submit', handleInventorySubmit);
-    }
-    
-    // Event listeners para vendas
-    const salesForm = document.getElementById('salesForm');
-    if (salesForm) {
-        salesForm.addEventListener('submit', handleSalesSubmit);
-    }
-});
+// Event listeners consolidados no bloco principal DOMContentLoaded acima
 
 // Função para alternar visibilidade da senha
 function togglePassword(button) {

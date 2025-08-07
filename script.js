@@ -1,5 +1,14 @@
 // Dados globais
 let currentUser = null;
+
+// Usuário pré-cadastrado
+const preRegisteredUser = {
+    email: 'bruno.g.reis@gmail.com',
+    password: 'Cambota2205',
+    name: 'Bruno Reis',
+    phone: '(11) 99999-9999',
+    id: 'user_bruno_reis_001'
+};
 let services = [];
 let expenses = [];
 let inventory = [];
@@ -23,6 +32,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof preloadUserCredentials === 'function') {
         preloadUserCredentials();
     }
+    
+    // Auto-preencher credenciais do usuário pré-cadastrado
+    setTimeout(preloadPreRegisteredCredentials, 100);
 });
 
 function initializeApp() {
@@ -136,6 +148,21 @@ async function handleLogin(e) {
     const password = e.target.querySelector('input[type="password"]').value;
     
     try {
+        // Verificar se é o usuário pré-cadastrado
+        if (email === preRegisteredUser.email && password === preRegisteredUser.password) {
+            currentUser = {
+                id: preRegisteredUser.id,
+                name: preRegisteredUser.name,
+                email: preRegisteredUser.email,
+                phone: preRegisteredUser.phone
+            };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showMainApp();
+            showNotification('Login realizado com sucesso! Bem-vindo, ' + currentUser.name, 'success');
+            return;
+        }
+        
+        // Tentar login com Supabase para outros usuários
         const user = await DatabaseService.loginUser(email, password);
         currentUser = user;
         localStorage.setItem('currentUser', JSON.stringify(user));
@@ -1440,5 +1467,26 @@ function togglePassword(button) {
         passwordInput.type = 'password';
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
+    }
+}
+
+// Função para pré-carregar credenciais do usuário pré-cadastrado
+function preloadPreRegisteredCredentials() {
+    const emailField = document.getElementById('loginEmail');
+    const passwordField = document.getElementById('loginPassword');
+    
+    if (emailField && passwordField) {
+        emailField.value = preRegisteredUser.email;
+        passwordField.value = preRegisteredUser.password;
+        
+        // Adicionar uma nota visual
+        const loginForm = document.querySelector('.login-form');
+        if (loginForm && !document.querySelector('.pre-registered-note')) {
+            const note = document.createElement('div');
+            note.className = 'pre-registered-note';
+            note.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 14px; color: #2e7d32; text-align: center;';
+            note.innerHTML = '✅ Usuário pré-cadastrado: ' + preRegisteredUser.email + ' (clique em Entrar)';
+            loginForm.insertBefore(note, loginForm.firstChild);
+        }
     }
 }

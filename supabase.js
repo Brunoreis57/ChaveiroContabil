@@ -1,6 +1,16 @@
 // Configuração do Supabase
-const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI';
-const SUPABASE_ANON_KEY = 'SUA_SUPABASE_ANON_KEY_AQUI';
+// IMPORTANTE: Substitua pelas suas credenciais reais do Supabase
+// Exemplo de URL: https://seuprojetoid.supabase.co
+// Exemplo de Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+const SUPABASE_URL = 'https://exemplo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo';
+
+// Verificar se as credenciais foram configuradas
+if (SUPABASE_URL === 'https://exemplo.supabase.co' || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo') {
+    console.error('⚠️ CONFIGURAÇÃO NECESSÁRIA: Por favor, configure suas credenciais do Supabase no arquivo supabase.js');
+    console.error('📖 Consulte o arquivo SUPABASE_SETUP.md para instruções completas');
+    alert('Configuração necessária: Por favor, configure suas credenciais do Supabase. Consulte o arquivo SUPABASE_SETUP.md para instruções.');
+}
 
 // Inicializar Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

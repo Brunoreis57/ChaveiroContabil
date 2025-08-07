@@ -147,9 +147,19 @@ async function handleLogin(e) {
     const email = e.target.querySelector('input[type="email"]').value;
     const password = e.target.querySelector('input[type="password"]').value;
     
+    // Debug logs
+    console.log('=== DEBUG LOGIN ===');
+    console.log('Email digitado:', email);
+    console.log('Senha digitada:', password);
+    console.log('Email esperado:', preRegisteredUser.email);
+    console.log('Senha esperada:', preRegisteredUser.password);
+    console.log('Email match:', email === preRegisteredUser.email);
+    console.log('Password match:', password === preRegisteredUser.password);
+    
     try {
         // Verificar se é o usuário pré-cadastrado
         if (email === preRegisteredUser.email && password === preRegisteredUser.password) {
+            console.log('✅ Login pré-cadastrado bem-sucedido!');
             currentUser = {
                 id: preRegisteredUser.id,
                 name: preRegisteredUser.name,
@@ -161,6 +171,8 @@ async function handleLogin(e) {
             showNotification('Login realizado com sucesso! Bem-vindo, ' + currentUser.name, 'success');
             return;
         }
+        
+        console.log('❌ Credenciais não correspondem ao usuário pré-cadastrado');
         
         // Tentar login com Supabase para outros usuários
         const user = await DatabaseService.loginUser(email, password);
@@ -1472,21 +1484,23 @@ function togglePassword(button) {
 
 // Função para pré-carregar credenciais do usuário pré-cadastrado
 function preloadPreRegisteredCredentials() {
-    const emailField = document.getElementById('loginEmail');
-    const passwordField = document.getElementById('loginPassword');
-    
-    if (emailField && passwordField) {
-        emailField.value = preRegisteredUser.email;
-        passwordField.value = preRegisteredUser.password;
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        const emailField = loginForm.querySelector('input[type="email"]');
+        const passwordField = loginForm.querySelector('input[type="password"]');
         
-        // Adicionar uma nota visual
-        const loginForm = document.querySelector('.login-form');
-        if (loginForm && !document.querySelector('.pre-registered-note')) {
-            const note = document.createElement('div');
-            note.className = 'pre-registered-note';
-            note.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 14px; color: #2e7d32; text-align: center;';
-            note.innerHTML = '✅ Usuário pré-cadastrado: ' + preRegisteredUser.email + ' (clique em Entrar)';
-            loginForm.insertBefore(note, loginForm.firstChild);
+        if (emailField && passwordField) {
+            emailField.value = preRegisteredUser.email;
+            passwordField.value = preRegisteredUser.password;
+            
+            // Adicionar uma nota visual
+            if (!document.querySelector('.pre-registered-note')) {
+                const note = document.createElement('div');
+                note.className = 'pre-registered-note';
+                note.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 14px; color: #2e7d32; text-align: center;';
+                note.innerHTML = '✅ Usuário pré-cadastrado: ' + preRegisteredUser.email + ' (clique em Entrar)';
+                loginForm.insertBefore(note, loginForm.firstChild);
+            }
         }
     }
 }

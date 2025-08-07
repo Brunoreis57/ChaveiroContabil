@@ -1,0 +1,411 @@
+// Configuração do Supabase
+const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI';
+const SUPABASE_ANON_KEY = 'SUA_SUPABASE_ANON_KEY_AQUI';
+
+// Inicializar Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Classe de Serviços do Banco de Dados Supabase
+class DatabaseService {
+    // USUÁRIOS
+    static async createUser(userData) {
+        try {
+            // Criar usuário com autenticação do Supabase
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: userData.email,
+                password: userData.password,
+                options: {
+                    data: {
+                        name: userData.name,
+                        phone: userData.phone
+                    }
+                }
+            });
+
+            if (authError) throw authError;
+
+            // Salvar dados adicionais na tabela profiles
+            if (authData.user) {
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: authData.user.id,
+                        name: userData.name,
+                        email: userData.email,
+                        phone: userData.phone,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (profileError) throw profileError;
+            }
+
+            return {
+                id: authData.user.id,
+                name: userData.name,
+                email: userData.email,
+                phone: userData.phone
+            };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async loginUser(email, password) {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            // Buscar dados adicionais do usuário
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', data.user.id)
+                .single();
+
+            if (profileError) throw profileError;
+
+            return {
+                id: data.user.id,
+                name: profile.name,
+                email: profile.email,
+                phone: profile.phone
+            };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static getCurrentUser() {
+        return supabase.auth.getUser();
+    }
+
+    static async logoutUser() {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // SERVIÇOS
+    static async createService(serviceData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('services')
+                .insert({
+                    ...serviceData,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getServices() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('services')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateService(id, updateData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('services')
+                .update(updateData)
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async deleteService(id) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { error } = await supabase
+                .from('services')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // DESPESAS
+    static async createExpense(expenseData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('expenses')
+                .insert({
+                    ...expenseData,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getExpenses() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('expenses')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('date', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateExpense(id, updateData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('expenses')
+                .update(updateData)
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async deleteExpense(id) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { error } = await supabase
+                .from('expenses')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // ESTOQUE
+    static async createStock(stockData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('stock')
+                .insert({
+                    ...stockData,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getStock() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('stock')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateStock(id, updateData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('stock')
+                .update(updateData)
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async deleteStock(id) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { error } = await supabase
+                .from('stock')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // LISTA DE PREÇOS
+    static async createPriceList(priceData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('price_list')
+                .insert({
+                    ...priceData,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getPriceList() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('price_list')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('service_name', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updatePriceList(id, updateData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { data, error } = await supabase
+                .from('price_list')
+                .update(updateData)
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async deletePriceList(id) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Usuário não autenticado');
+
+            const { error } = await supabase
+                .from('price_list')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+}

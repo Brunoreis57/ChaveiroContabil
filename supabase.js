@@ -1,16 +1,6 @@
 // Configuração do Supabase
-// IMPORTANTE: Substitua pelas suas credenciais reais do Supabase
-// Exemplo de URL: https://seuprojetoid.supabase.co
-// Exemplo de Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-const SUPABASE_URL = 'https://exemplo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo';
-
-// Verificar se as credenciais foram configuradas
-if (SUPABASE_URL === 'https://exemplo.supabase.co' || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.exemplo') {
-    console.error('⚠️ CONFIGURAÇÃO NECESSÁRIA: Por favor, configure suas credenciais do Supabase no arquivo supabase.js');
-    console.error('📖 Consulte o arquivo SUPABASE_SETUP.md para instruções completas');
-    alert('Configuração necessária: Por favor, configure suas credenciais do Supabase. Consulte o arquivo SUPABASE_SETUP.md para instruções.');
-}
+const SUPABASE_URL = 'https://vzdobzmacjzfclctzyha.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6ZG9iem1hY2p6ZmNsY3R6eWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MzM1NTAsImV4cCI6MjA3MDEwOTU1MH0.-9xe4X-uTmXAQDgHyF05pE82ZOVhV4mHTfNhEk7DRaI';
 
 // Inicializar Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

@@ -1521,3 +1521,130 @@ function preloadPreRegisteredCredentials() {
         }
     }
 }
+
+// Função para importar dados do Excel
+async function importExcelData() {
+    const excelData = [
+        { date: '2025-07-17', name: 'Tatiana', service: 'Fechadura Eletronica', value: 250, expense: null },
+        { date: '2025-07-21', name: 'Vera', service: 'Troca Miolos Tetra', value: 240, expense: 87 },
+        { date: '2025-07-21', name: 'Amanda', service: 'Reparo Fechadura', value: 150, expense: null },
+        { date: '2025-07-23', name: 'Pedro', service: 'Fechadura + instalacao', value: 315, expense: 120 },
+        { date: '2025-07-29', name: 'Juliana', service: 'Reparo Fechadura', value: 150, expense: 36 },
+        { date: '2025-07-30', name: 'Giovana', service: 'Fechadura + instalacao', value: 240, expense: null },
+        { date: '2025-07-01', name: 'Eduardo', service: 'Fechadura Eletronica', value: 300, expense: null },
+        { date: '2025-07-02', name: 'Matheus L', service: 'Fechadura Eletronica', value: 350, expense: null },
+        { date: '2025-07-02', name: 'Mateus S', service: 'Fechadura Eletronica', value: 350, expense: null }
+    ];
+    
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    showNotification('Iniciando importação dos dados...', 'info');
+    
+    for (const item of excelData) {
+        try {
+            // Criar serviço
+            const serviceData = {
+                date: item.date,
+                type: item.service,
+                lockModel: 'Não especificado',
+                value: item.value,
+                notes: `Cliente: ${item.name}`,
+                userId: currentUser.id
+            };
+            
+            const newService = await DatabaseService.createService(serviceData);
+            
+            // Adicionar à lista local
+            services.push({
+                id: newService.id,
+                date: newService.date,
+                type: newService.type,
+                lockModel: newService.lock_model,
+                value: newService.value,
+                notes: newService.notes,
+                userId: newService.user_id
+            });
+            
+            // Criar despesa se existir
+            if (item.expense && item.expense > 0) {
+                const expenseData = {
+                    date: item.date,
+                    type: 'Materiais',
+                    description: `Materiais para serviço - ${item.name}`,
+                    value: item.expense,
+                    userId: currentUser.id
+                };
+                
+                const newExpense = await DatabaseService.createExpense(expenseData);
+                
+                // Adicionar à lista local
+                expenses.push({
+                    id: newExpense.id,
+                    date: newExpense.date,
+                    type: newExpense.type,
+                    description: newExpense.description,
+                    value: newExpense.value,
+                    userId: newExpense.user_id
+                });
+            }
+            
+            successCount++;
+        } catch (error) {
+            errorCount++;
+            errors.push(`Erro ao importar ${item.name}: ${error.message}`);
+            console.error(`Erro ao importar dados de ${item.name}:`, error);
+        }
+    }
+    
+    // Atualizar interface
+    loadServices();
+    loadExpenses();
+    updateDashboard();
+    
+    // Mostrar resultado
+    if (errorCount === 0) {
+        showNotification(`Importação concluída com sucesso! ${successCount} registros importados.`, 'success');
+    } else {
+        showNotification(`Importação concluída com ${successCount} sucessos e ${errorCount} erros. Verifique o console para detalhes.`, 'warning');
+        console.warn('Erros durante a importação:', errors);
+    }
+}
+
+// Função para mostrar modal de importação
+function showImportModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'importModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Importar Dados do Excel</h2>
+                <span class="close" onclick="closeModal('importModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Esta função irá importar os seguintes dados:</p>
+                <ul>
+                    <li>9 serviços realizados</li>
+                    <li>4 despesas relacionadas</li>
+                    <li>Dados de julho de 2025</li>
+                </ul>
+                <p><strong>Atenção:</strong> Os dados serão adicionados ao banco de dados atual.</p>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('importModal')">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="executeImport()">Importar Dados</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+// Função para executar a importação
+async function executeImport() {
+    closeModal('importModal');
+    await importExcelData();
+}

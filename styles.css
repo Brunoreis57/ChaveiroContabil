@@ -476,6 +476,32 @@ body {
     box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
 }
 
+.import-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.import-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.header-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .filters {
     display: flex;
     gap: 15px;

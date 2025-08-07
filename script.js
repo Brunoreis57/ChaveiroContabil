@@ -36,17 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-preencher credenciais do usuário pré-cadastrado
     setTimeout(preloadPreRegisteredCredentials, 100);
     
-    // Testar conexão com Supabase (apenas para diagnóstico)
-    setTimeout(async () => {
-        if (typeof DatabaseService !== 'undefined') {
-            const connectionTest = await DatabaseService.testConnection();
-            if (connectionTest.success) {
-                console.log('🔗 Status do Supabase: Conectado e funcionando');
-            } else {
-                console.warn('⚠️ Status do Supabase: Problema de conexão -', connectionTest.error);
-            }
-        }
-    }, 2000);
+    console.log('🔗 Sistema inicializado com localStorage');
 });
 
 function initializeApp() {
@@ -151,7 +141,7 @@ function showRegister() {
     document.querySelectorAll('.tab-btn')[1].classList.add('active');
 }
 
-async function handleLogin(e) {
+function handleLogin(e) {
     e.preventDefault();
     const email = e.target.querySelector('input[type="email"]').value.trim();
     const password = e.target.querySelector('input[type="password"]').value.trim();
@@ -171,25 +161,36 @@ async function handleLogin(e) {
             return;
         }
         
-        // Tentar login com Supabase para outros usuários
-        const user = await DatabaseService.loginUser(email, password);
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        showMainApp();
-        showNotification('Login realizado com sucesso!', 'success');
+        // Verificar usuários cadastrados localmente
+        const storedUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const user = storedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+        
+        if (user) {
+            currentUser = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone
+            };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showMainApp();
+            showNotification('Login realizado com sucesso! Bem-vindo, ' + currentUser.name, 'success');
+        } else {
+            showNotification('Email ou senha incorretos!', 'error');
+        }
     } catch (error) {
         console.error('Erro no login:', error);
         showNotification('Email ou senha incorretos!', 'error');
     }
 }
 
-async function handleRegister(e) {
+function handleRegister(e) {
     e.preventDefault();
     const inputs = e.target.querySelectorAll('input');
     const userData = {
-        name: inputs[0].value,
-        email: inputs[1].value,
-        phone: inputs[2].value,
+        name: inputs[0].value.trim(),
+        email: inputs[1].value.trim(),
+        phone: inputs[2].value.trim(),
         password: inputs[3].value,
         confirmPassword: inputs[4].value
     };
@@ -200,16 +201,35 @@ async function handleRegister(e) {
     }
     
     try {
-        await DatabaseService.createUser(userData);
+        // Verificar se o email já está cadastrado
+        const storedUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const emailExists = storedUsers.some(u => u.email.toLowerCase() === userData.email.toLowerCase());
+        
+        if (emailExists) {
+            showNotification('Este email já está cadastrado!', 'error');
+            return;
+        }
+        
+        // Criar novo usuário
+        const newUser = {
+            id: generateId(),
+            name: userData.name,
+            email: userData.email,
+            phone: userData.phone,
+            password: userData.password,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Salvar no localStorage
+        storedUsers.push(newUser);
+        localStorage.setItem('registeredUsers', JSON.stringify(storedUsers));
+        
         showNotification('Cadastro realizado com sucesso!', 'success');
         showLogin();
+        console.log('✅ Usuário cadastrado no localStorage:', { id: newUser.id, name: newUser.name, email: newUser.email });
     } catch (error) {
         console.error('Erro no cadastro:', error);
-        if (error.code === '23505') { // Unique violation
-            showNotification('Este email já está cadastrado!', 'error');
-        } else {
-            showNotification('Erro ao criar conta. Tente novamente.', 'error');
-        }
+        showNotification('Erro ao criar conta. Tente novamente.', 'error');
     }
 }
 
@@ -311,62 +331,54 @@ function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
 }
 
-// Gerenciamento de dados
-async function loadStoredData() {
+// Gerenciamento de dados com localStorage
+function loadStoredData() {
     const userId = currentUser?.id;
     if (userId) {
         try {
-            const [servicesData, expensesData, inventoryData, salesData] = await Promise.all([
-                DatabaseService.getServices(userId),
-                DatabaseService.getExpenses(userId),
-                DatabaseService.getInventory(userId),
-                DatabaseService.getSalesList(userId)
-            ]);
+            // Carregar dados do localStorage
+            const storedServices = localStorage.getItem(`services_${userId}`);
+            const storedExpenses = localStorage.getItem(`expenses_${userId}`);
+            const storedInventory = localStorage.getItem(`inventory_${userId}`);
+            const storedSalesList = localStorage.getItem(`salesList_${userId}`);
             
-            services = servicesData.map(s => ({
-                id: s.id,
-                date: s.date,
-                type: s.type,
-                lockModel: s.lock_model,
-                value: s.value,
-                notes: s.notes,
-                userId: s.user_id
-            }));
+            services = storedServices ? JSON.parse(storedServices) : [];
+            expenses = storedExpenses ? JSON.parse(storedExpenses) : [];
+            inventory = storedInventory ? JSON.parse(storedInventory) : [];
+            salesList = storedSalesList ? JSON.parse(storedSalesList) : [];
             
-            expenses = expensesData.map(e => ({
-                id: e.id,
-                date: e.date,
-                type: e.type,
-                description: e.description,
-                value: e.value,
-                userId: e.user_id
-            }));
-            
-            inventory = inventoryData.map(i => ({
-                id: i.id,
-                name: i.name,
-                category: i.category,
-                quantity: i.quantity,
-                cost: i.cost,
-                price: i.price,
-                notes: i.notes,
-                createdAt: i.created_at
-            }));
-            
-            salesList = salesData.map(s => ({
-                id: s.id,
-                serviceName: s.service_name,
-                category: s.category,
-                price: s.price,
-                time: s.time,
-                description: s.description,
-                createdAt: s.created_at
-            }));
+            console.log('✅ Dados carregados do localStorage:', {
+                services: services.length,
+                expenses: expenses.length,
+                inventory: inventory.length,
+                salesList: salesList.length
+            });
         } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-            showNotification('Erro ao carregar dados do servidor', 'error');
+            console.error('Erro ao carregar dados do localStorage:', error);
+            showNotification('Erro ao carregar dados locais', 'error');
         }
     }
+}
+
+// Função para salvar dados no localStorage
+function saveDataToLocalStorage() {
+    const userId = currentUser?.id;
+    if (userId) {
+        try {
+            localStorage.setItem(`services_${userId}`, JSON.stringify(services));
+            localStorage.setItem(`expenses_${userId}`, JSON.stringify(expenses));
+            localStorage.setItem(`inventory_${userId}`, JSON.stringify(inventory));
+            localStorage.setItem(`salesList_${userId}`, JSON.stringify(salesList));
+            console.log('✅ Dados salvos no localStorage');
+        } catch (error) {
+            console.error('Erro ao salvar dados no localStorage:', error);
+        }
+    }
+}
+
+// Função para gerar IDs únicos
+function generateId() {
+    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
 // Função saveData não é mais necessária pois salvamos diretamente no banco
@@ -378,36 +390,32 @@ function showServiceModal() {
     document.getElementById('serviceDate').value = new Date().toISOString().split('T')[0];
 }
 
-async function handleServiceSubmit(e) {
+function handleServiceSubmit(e) {
     e.preventDefault();
     
     const serviceData = {
+        id: generateId(),
         date: document.getElementById('serviceDate').value,
         type: document.getElementById('serviceType').value,
         lockModel: document.getElementById('lockModel').value,
         value: parseFloat(document.getElementById('serviceValue').value),
         notes: document.getElementById('serviceNotes').value,
-        userId: currentUser.id
+        userId: currentUser.id,
+        createdAt: new Date().toISOString()
     };
     
     try {
-        const newService = await DatabaseService.createService(serviceData);
-        
         // Adicionar à lista local
-        services.push({
-            id: newService.id,
-            date: newService.date,
-            type: newService.type,
-            lockModel: newService.lock_model,
-            value: newService.value,
-            notes: newService.notes,
-            userId: newService.user_id
-        });
+        services.push(serviceData);
+        
+        // Salvar no localStorage
+        saveDataToLocalStorage();
         
         closeModal('serviceModal');
         loadServices();
         updateDashboard();
         showNotification('Serviço adicionado com sucesso!', 'success');
+        console.log('✅ Serviço salvo no localStorage:', serviceData);
     } catch (error) {
         console.error('Erro ao adicionar serviço:', error);
         showNotification('Erro ao adicionar serviço. Tente novamente.', 'error');
@@ -530,11 +538,11 @@ function filterServices() {
     `).join('');
 }
 
-async function deleteService(id) {
+function deleteService(id) {
     if (confirm('Tem certeza que deseja excluir este serviço?')) {
         try {
-            await DatabaseService.deleteService(id);
             services = services.filter(service => service.id !== id);
+            saveDataToLocalStorage();
             loadServices();
             updateDashboard();
             showNotification('Serviço excluído com sucesso!', 'success');
@@ -552,34 +560,31 @@ function showExpenseModal() {
     document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
 }
 
-async function handleExpenseSubmit(e) {
+function handleExpenseSubmit(e) {
     e.preventDefault();
     
     const expenseData = {
+        id: generateId(),
         date: document.getElementById('expenseDate').value,
         type: document.getElementById('expenseType').value,
         description: document.getElementById('expenseDescription').value,
         value: parseFloat(document.getElementById('expenseValue').value),
-        userId: currentUser.id
+        userId: currentUser.id,
+        createdAt: new Date().toISOString()
     };
     
     try {
-        const newExpense = await DatabaseService.createExpense(expenseData);
-        
         // Adicionar à lista local
-        expenses.push({
-            id: newExpense.id,
-            date: newExpense.date,
-            type: newExpense.type,
-            description: newExpense.description,
-            value: newExpense.value,
-            userId: newExpense.user_id
-        });
+        expenses.push(expenseData);
+        
+        // Salvar no localStorage
+        saveDataToLocalStorage();
         
         closeModal('expenseModal');
         loadExpenses();
         updateDashboard();
         showNotification('Despesa adicionada com sucesso!', 'success');
+        console.log('✅ Despesa salva no localStorage:', expenseData);
     } catch (error) {
         console.error('Erro ao adicionar despesa:', error);
         showNotification('Erro ao adicionar despesa. Tente novamente.', 'error');
@@ -683,11 +688,11 @@ function filterExpenses() {
     `).join('');
 }
 
-async function deleteExpense(id) {
+function deleteExpense(id) {
     if (confirm('Tem certeza que deseja excluir esta despesa?')) {
         try {
-            await DatabaseService.deleteExpense(id);
             expenses = expenses.filter(expense => expense.id !== id);
+            saveDataToLocalStorage();
             loadExpenses();
             updateDashboard();
             showNotification('Despesa excluída com sucesso!', 'success');
@@ -1140,33 +1145,25 @@ function showInventoryModal() {
     document.getElementById('inventoryForm').reset();
 }
 
-async function handleInventorySubmit(e) {
+function handleInventorySubmit(e) {
     e.preventDefault();
     
     const inventoryData = {
+        id: generateId(),
         name: document.getElementById('inventoryName').value,
         category: document.getElementById('inventoryCategory').value,
         quantity: parseInt(document.getElementById('inventoryQuantity').value),
         cost: parseFloat(document.getElementById('inventoryCost').value),
         price: parseFloat(document.getElementById('inventoryPrice').value),
         notes: document.getElementById('inventoryNotes').value,
-        userId: currentUser.id
+        userId: currentUser.id,
+        createdAt: new Date().toISOString()
     };
     
     try {
-        const newItem = await DatabaseService.createInventoryItem(inventoryData);
-        
         // Adicionar à lista local
-        inventory.push({
-            id: newItem.id,
-            name: newItem.name,
-            category: newItem.category,
-            quantity: newItem.quantity,
-            price: newItem.price,
-            supplier: newItem.supplier,
-            notes: newItem.notes,
-            userId: newItem.user_id
-        });
+        inventory.push(inventoryData);
+        saveDataToLocalStorage();
         
         closeModal('inventoryModal');
         loadInventory();
@@ -1292,11 +1289,11 @@ function filterInventory() {
     `).join('');
 }
 
-async function deleteInventoryItem(id) {
+function deleteInventoryItem(id) {
     if (confirm('Tem certeza que deseja excluir este item do estoque?')) {
         try {
-            await DatabaseService.deleteInventoryItem(id);
             inventory = inventory.filter(item => item.id !== id);
+            saveDataToLocalStorage();
             loadInventory();
             showNotification('Item removido do estoque!', 'success');
         } catch (error) {
@@ -1312,10 +1309,11 @@ function showSalesModal() {
     document.getElementById('salesForm').reset();
 }
 
-async function handleSalesSubmit(e) {
+function handleSalesSubmit(e) {
     e.preventDefault();
     
     const salesData = {
+        id: generateId(),
         date: document.getElementById('salesDate').value,
         item: document.getElementById('salesItem').value,
         quantity: parseInt(document.getElementById('salesQuantity').value),
@@ -1323,24 +1321,14 @@ async function handleSalesSubmit(e) {
         total: parseInt(document.getElementById('salesQuantity').value) * parseFloat(document.getElementById('salesPrice').value),
         customer: document.getElementById('salesCustomer').value,
         notes: document.getElementById('salesNotes').value,
-        userId: currentUser.id
+        userId: currentUser.id,
+        createdAt: new Date().toISOString()
     };
     
     try {
-        const newSale = await DatabaseService.createSalesItem(salesData);
-        
         // Adicionar à lista local
-        salesList.push({
-            id: newSale.id,
-            date: newSale.date,
-            item: newSale.item,
-            quantity: newSale.quantity,
-            price: newSale.price,
-            total: newSale.total,
-            customer: newSale.customer,
-            notes: newSale.notes,
-            userId: newSale.user_id
-        });
+        salesList.push(salesData);
+        saveDataToLocalStorage();
         
         closeModal('salesModal');
         loadSales();
@@ -1454,11 +1442,11 @@ function filterSales() {
     `).join('');
 }
 
-async function deleteSalesItem(id) {
+function deleteSalesItem(id) {
     if (confirm('Tem certeza que deseja excluir este serviço da lista?')) {
         try {
-            await DatabaseService.deleteSalesItem(id);
             salesList = salesList.filter(service => service.id !== id);
+            saveDataToLocalStorage();
             loadSales();
             showNotification('Serviço removido da lista!', 'success');
         } catch (error) {
@@ -1523,7 +1511,7 @@ function preloadPreRegisteredCredentials() {
 }
 
 // Função para importar dados do Excel
-async function importExcelData() {
+function importExcelData() {
     const excelData = [
         { date: '2025-07-17', name: 'Tatiana', service: 'Fechadura Eletronica', value: 250, expense: null },
         { date: '2025-07-21', name: 'Vera', service: 'Troca Miolos Tetra', value: 240, expense: 87 },
@@ -1546,48 +1534,33 @@ async function importExcelData() {
         try {
             // Criar serviço
             const serviceData = {
+                id: generateId(),
                 date: item.date,
                 type: item.service,
                 lockModel: 'Não especificado',
                 value: item.value,
                 notes: `Cliente: ${item.name}`,
-                userId: currentUser.id
+                userId: currentUser.id,
+                createdAt: new Date().toISOString()
             };
             
-            const newService = await DatabaseService.createService(serviceData);
-            
             // Adicionar à lista local
-            services.push({
-                id: newService.id,
-                date: newService.date,
-                type: newService.type,
-                lockModel: newService.lock_model,
-                value: newService.value,
-                notes: newService.notes,
-                userId: newService.user_id
-            });
+            services.push(serviceData);
             
             // Criar despesa se existir
             if (item.expense && item.expense > 0) {
                 const expenseData = {
+                    id: generateId(),
                     date: item.date,
                     type: 'Materiais',
                     description: `Materiais para serviço - ${item.name}`,
                     value: item.expense,
-                    userId: currentUser.id
+                    userId: currentUser.id,
+                    createdAt: new Date().toISOString()
                 };
                 
-                const newExpense = await DatabaseService.createExpense(expenseData);
-                
                 // Adicionar à lista local
-                expenses.push({
-                    id: newExpense.id,
-                    date: newExpense.date,
-                    type: newExpense.type,
-                    description: newExpense.description,
-                    value: newExpense.value,
-                    userId: newExpense.user_id
-                });
+                expenses.push(expenseData);
             }
             
             successCount++;
@@ -1644,7 +1617,7 @@ function showImportModal() {
 }
 
 // Função para executar a importação
-async function executeImport() {
+function executeImport() {
     closeModal('importModal');
-    await importExcelData();
+    importExcelData();
 }

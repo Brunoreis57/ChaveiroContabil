@@ -144,22 +144,12 @@ function showRegister() {
 
 async function handleLogin(e) {
     e.preventDefault();
-    const email = e.target.querySelector('input[type="email"]').value;
-    const password = e.target.querySelector('input[type="password"]').value;
-    
-    // Debug logs
-    console.log('=== DEBUG LOGIN ===');
-    console.log('Email digitado:', email);
-    console.log('Senha digitada:', password);
-    console.log('Email esperado:', preRegisteredUser.email);
-    console.log('Senha esperada:', preRegisteredUser.password);
-    console.log('Email match:', email === preRegisteredUser.email);
-    console.log('Password match:', password === preRegisteredUser.password);
+    const email = e.target.querySelector('input[type="email"]').value.trim();
+    const password = e.target.querySelector('input[type="password"]').value.trim();
     
     try {
-        // Verificar se é o usuário pré-cadastrado
-        if (email === preRegisteredUser.email && password === preRegisteredUser.password) {
-            console.log('✅ Login pré-cadastrado bem-sucedido!');
+        // Verificar se é o usuário pré-cadastrado (comparação case-insensitive para email)
+        if (email.toLowerCase() === preRegisteredUser.email.toLowerCase() && password === preRegisteredUser.password) {
             currentUser = {
                 id: preRegisteredUser.id,
                 name: preRegisteredUser.name,
@@ -171,8 +161,6 @@ async function handleLogin(e) {
             showNotification('Login realizado com sucesso! Bem-vindo, ' + currentUser.name, 'success');
             return;
         }
-        
-        console.log('❌ Credenciais não correspondem ao usuário pré-cadastrado');
         
         // Tentar login com Supabase para outros usuários
         const user = await DatabaseService.loginUser(email, password);

@@ -74,10 +74,7 @@ function setupEventListeners() {
     document.getElementById('serviceForm').addEventListener('submit', handleServiceSubmit);
     document.getElementById('expenseForm').addEventListener('submit', handleExpenseSubmit);
     
-    // Navegação
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => navigateToSection(item.dataset.section));
-    });
+    // Navegação será configurada após o login em setupNavigationListeners()
     
     // Filtros
     document.getElementById('reportPeriod').addEventListener('change', updateReports);
@@ -232,8 +229,28 @@ function showMainApp() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('userName').textContent = currentUser.name;
+    
+    // Configurar event listeners de navegação após mostrar o mainApp
+    setupNavigationListeners();
+    
     navigateToSection('dashboard');
     updateDashboard();
+}
+
+function setupNavigationListeners() {
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    navItems.forEach((item) => {
+        // Remover listeners existentes para evitar duplicação
+        const newItem = item.cloneNode(true);
+        item.parentNode.replaceChild(newItem, item);
+        
+        newItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigateToSection(newItem.dataset.section);
+        });
+    });
 }
 
 // Navegação

@@ -1104,6 +1104,9 @@ document.head.appendChild(style);
 
 // Dados de exemplo para demonstração
 function loadSampleData() {
+    // Primeiro carregar dados do localStorage
+    loadStoredData();
+    
     if (services.length === 0 && expenses.length === 0) {
         // Adicionar alguns dados de exemplo
         const sampleServices = [
@@ -1140,7 +1143,7 @@ function loadSampleData() {
         
         services.push(...sampleServices);
         expenses.push(...sampleExpenses);
-        saveData();
+        saveDataToLocalStorage();
     }
 }
 

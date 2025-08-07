@@ -35,6 +35,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Auto-preencher credenciais do usuário pré-cadastrado
     setTimeout(preloadPreRegisteredCredentials, 100);
+    
+    // Testar conexão com Supabase (apenas para diagnóstico)
+    setTimeout(async () => {
+        if (typeof DatabaseService !== 'undefined') {
+            const connectionTest = await DatabaseService.testConnection();
+            if (connectionTest.success) {
+                console.log('🔗 Status do Supabase: Conectado e funcionando');
+            } else {
+                console.warn('⚠️ Status do Supabase: Problema de conexão -', connectionTest.error);
+            }
+        }
+    }, 2000);
 });
 
 function initializeApp() {

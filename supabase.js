@@ -7,6 +7,28 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Classe de Serviços do Banco de Dados Supabase
 class DatabaseService {
+    // VERIFICAÇÃO DE CONECTIVIDADE
+    static async testConnection() {
+        try {
+            console.log('🔄 Testando conexão com Supabase...');
+            
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('count')
+                .limit(1);
+            
+            if (error) {
+                console.error('❌ Erro na conexão com Supabase:', error);
+                return { success: false, error: error.message };
+            }
+            
+            console.log('✅ Conexão com Supabase estabelecida com sucesso!');
+            return { success: true, message: 'Conectado ao Supabase' };
+        } catch (error) {
+            console.error('❌ Erro geral de conexão:', error);
+            return { success: false, error: error.message };
+        }
+    }
     // USUÁRIOS
     static async createUser(userData) {
         try {
@@ -96,6 +118,8 @@ class DatabaseService {
     // SERVIÇOS
     static async createService(serviceData) {
         try {
+            console.log('🔄 Tentando salvar serviço no Supabase:', serviceData);
+            
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Usuário não autenticado');
 
@@ -109,9 +133,15 @@ class DatabaseService {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao salvar serviço no Supabase:', error);
+                throw error;
+            }
+            
+            console.log('✅ Serviço salvo com sucesso no Supabase:', data);
             return data;
         } catch (error) {
+            console.error('❌ Erro geral ao criar serviço:', error);
             throw error;
         }
     }
@@ -175,6 +205,8 @@ class DatabaseService {
     // DESPESAS
     static async createExpense(expenseData) {
         try {
+            console.log('🔄 Tentando salvar despesa no Supabase:', expenseData);
+            
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Usuário não autenticado');
 
@@ -188,9 +220,15 @@ class DatabaseService {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao salvar despesa no Supabase:', error);
+                throw error;
+            }
+            
+            console.log('✅ Despesa salva com sucesso no Supabase:', data);
             return data;
         } catch (error) {
+            console.error('❌ Erro geral ao criar despesa:', error);
             throw error;
         }
     }

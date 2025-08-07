@@ -1597,7 +1597,7 @@ function showImportModal() {
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Importar Dados do Excel</h2>
-                <span class="close" onclick="closeModal('importModal')">&times;</span>
+                <span class="close" onclick="closeImportModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <p>Esta função irá importar os seguintes dados:</p>
@@ -1608,7 +1608,7 @@ function showImportModal() {
                 </ul>
                 <p><strong>Atenção:</strong> Os dados serão adicionados ao banco de dados atual.</p>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('importModal')">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="executeImport()">Importar Dados</button>
                 </div>
             </div>
@@ -1619,8 +1619,16 @@ function showImportModal() {
     modal.style.display = 'block';
 }
 
+// Função para fechar o modal de importação
+function closeImportModal() {
+    const modal = document.getElementById('importModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
 // Função para executar a importação
 function executeImport() {
-    closeModal('importModal');
+    closeImportModal();
     importExcelData();
 }

@@ -1,12 +1,11 @@
 // Configuração do Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyD3TI623gpV5xgvhGnEReCIa22YkSGYhAs",
-    authDomain: "chaveirocontabil.firebaseapp.com",
-    projectId: "chaveirocontabil",
-    storageBucket: "chaveirocontabil.firebasestorage.app",
-    messagingSenderId: "658638886556",
-    appId: "1:658638886556:web:ea3f6ff210afad8b7ebf59",
-    measurementId: "G-QF5JG8EYE9"
+    apiKey: "AIzaSyCo2qsHfvMKT8CZwBKCXMh5XQMSmO-hzII",
+    authDomain: "chaveirobr-a4e65.firebaseapp.com",
+    projectId: "chaveirobr-a4e65",
+    storageBucket: "chaveirobr-a4e65.firebasestorage.app",
+    messagingSenderId: "1027439031553",
+    appId: "1:1027439031553:web:d37b7ee069478789105700"
 };
 
 // Inicializar Firebase
